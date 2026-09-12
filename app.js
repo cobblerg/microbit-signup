@@ -2,7 +2,7 @@
 // 1. 구글 앱스스크립트 배포 URL 설정
 // 구글 스프레드시트의 Apps Script를 웹 앱으로 배포한 후 나오는 URL을 아래 따옴표 안에 넣어주세요.
 // =================================================================
-const GOOGLE_SCRIPT_URL = "여기에_구글_앱스스크립트_웹앱_URL을_붙여넣으세요";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyiiwjB7cWK2taHYCVJEa-hL0fv7QSZyteEIGew2AWPiv_LHE-wNS9rZiugan7HnMeIlQ/exec";
 
 const form = document.getElementById("signupForm");
 const submitButton = document.getElementById("submitButton");
