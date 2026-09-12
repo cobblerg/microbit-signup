@@ -1,7 +1,7 @@
 // =================================================================
 // 1. 구글 앱스스크립트 배포 URL 설정
 // =================================================================
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsOu5GDUVyN3YDzsQHiPDPOV2C46C_H02eolw67uM86SloDM5J17qYaIlgxkNA6zG2Og/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNMXRy0dSuMTorohwukDBOZ0yQT3rzSvLkumR7i-Tmk4eKcRh2SEon9E-qfyR4bhS--A/exec";
 
 // 요소 가져오기
 const signupForm = document.getElementById("signupForm");
