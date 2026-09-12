@@ -79,6 +79,56 @@ body {
   color: var(--text-sub);
 }
 
+/* 상단 모드 전환 탭 */
+.tab-container {
+  display: flex;
+  background-color: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-sub);
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+  background: #ffffff;
+  color: var(--primary-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 취소 안내 문구 박스 */
+.notice-box {
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+/* 취소 버튼 스타일 (부드러운 레드/로즈) */
+.submit-btn.cancel-btn {
+  background-color: #e11d48;
+}
+
+.submit-btn.cancel-btn:hover {
+  background-color: #be123c;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+}
+
 /* 폼 입력창 */
 .form {
   display: flex;

@@ -1,68 +1,96 @@
 // =================================================================
 // 1. 구글 앱스스크립트 배포 URL 설정
-// 구글 스프레드시트의 Apps Script를 웹 앱으로 배포한 후 나오는 URL을 아래 따옴표 안에 넣어주세요.
 // =================================================================
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsOu5GDUVyN3YDzsQHiPDPOV2C46C_H02eolw67uM86SloDM5J17qYaIlgxkNA6zG2Og/exec";
 
-const form = document.getElementById("signupForm");
+// 요소 가져오기
+const signupForm = document.getElementById("signupForm");
+const cancelForm = document.getElementById("cancelForm");
 const submitButton = document.getElementById("submitButton");
-const btnText = submitButton.querySelector(".btn-text");
+const cancelButton = document.getElementById("cancelButton");
 const statusMessage = document.getElementById("statusMessage");
 
-// 폼 제출 이벤트 처리
-form.addEventListener("submit", async (e) => {
-  e.preventDefault(); // 페이지 새로고침 방지
+const tabApply = document.getElementById("tabApply");
+const tabCancel = document.getElementById("tabCancel");
 
-  // 입력된 값 가져오기
+// 탭 전환 함수
+function switchTab(tab) {
+  hideStatus();
+  if (tab === "apply") {
+    tabApply.classList.add("active");
+    tabCancel.classList.remove("active");
+    signupForm.style.display = "flex";
+    cancelForm.style.display = "none";
+  } else {
+    tabCancel.classList.add("active");
+    tabApply.classList.remove("active");
+    signupForm.style.display = "none";
+    cancelForm.style.display = "flex";
+  }
+}
+
+// 1. 참가 신청 폼 제출 처리
+signupForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
   const formData = {
+    action: "apply", // 신청 작업
     userName: document.getElementById("userName").value.trim(),
     schoolName: document.getElementById("schoolName").value.trim(),
     phoneNumber: document.getElementById("phoneNumber").value.trim(),
   };
 
-  // URL 미입력 시 친절한 안내
-  if (GOOGLE_SCRIPT_URL.includes("여기에_구글")) {
-    showStatus(
-      "⚠️ 아직 구글 앱스스크립트 URL이 연결되지 않았습니다.<br>app.js 파일 상단의 GOOGLE_SCRIPT_URL을 설정해 주세요.",
-      "error"
-    );
+  await sendRequest(formData, signupForm, submitButton, "신청 완료하기", "신청 접수 중...");
+});
+
+// 2. 신청 취소 폼 제출 처리
+cancelForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const formData = {
+    action: "cancel", // 취소 작업
+    userName: document.getElementById("cancelUserName").value.trim(),
+    phoneNumber: document.getElementById("cancelPhoneNumber").value.trim(),
+  };
+
+  if (!confirm(`${formData.userName}님의 신청을 정말 취소하시겠습니까?`)) {
     return;
   }
 
-  // 버튼 로딩 상태로 변경
-  setLoading(true);
+  await sendRequest(formData, cancelForm, cancelButton, "신청 취소하기", "취소 처리 중...");
+});
+
+// 공통 전송 함수
+async function sendRequest(payload, targetForm, button, defaultText, loadingText) {
+  setButtonLoading(button, true, loadingText);
   hideStatus();
 
   try {
-    // 구글 앱스스크립트 웹 앱으로 데이터 전송 (POST 요청)
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
       headers: {
-        "Content-Type": "text/plain;charset=utf-8", // CORS 방지용 텍스트 형식 전송
+        "Content-Type": "text/plain;charset=utf-8",
       },
-      body: JSON.stringify(formData),
+      body: JSON.stringify(payload),
     });
 
     const result = await response.json();
 
     if (result.status === "success") {
-      // 신청 성공 시 폼 숨기고 축하 메시지 표시
-      form.style.display = "none";
+      targetForm.style.display = "none";
       showStatus(
-        `🎉 <strong>신청이 정상적으로 완료되었습니다!</strong><br>${result.message}`,
+        `🎉 <strong>처리 완료</strong><br>${result.message}`,
         "success"
       );
     } else if (result.status === "closed") {
-      // 정원 마감 시 안내
-      form.style.display = "none";
+      targetForm.style.display = "none";
       showStatus(
-        `🚫 <strong>선착순 접수가 마감되었습니다.</strong><br>${result.message}`,
+        `🚫 <strong>선착순 접수 마감</strong><br>${result.message}`,
         "error"
       );
     } else {
-      // 기타 안내
       showStatus(`⚠️ ${result.message || "오류가 발생했습니다."}`, "error");
-      setLoading(false);
+      setButtonLoading(button, false, defaultText);
     }
   } catch (error) {
     console.error("전송 에러:", error);
@@ -70,24 +98,25 @@ form.addEventListener("submit", async (e) => {
       "네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
       "error"
     );
-    setLoading(false);
-  }
-});
-
-// 버튼 로딩 토글 함수
-function setLoading(isLoading) {
-  if (isLoading) {
-    submitButton.disabled = true;
-    submitButton.classList.add("loading");
-    btnText.textContent = "신청 접수 중...";
-  } else {
-    submitButton.disabled = false;
-    submitButton.classList.remove("loading");
-    btnText.textContent = "신청 완료하기";
+    setButtonLoading(button, false, defaultText);
   }
 }
 
-// 상태 메시지 보여주기 함수
+// 버튼 로딩 토글 함수
+function setButtonLoading(button, isLoading, text) {
+  const btnText = button.querySelector(".btn-text");
+  if (isLoading) {
+    button.disabled = true;
+    button.classList.add("loading");
+    btnText.textContent = text;
+  } else {
+    button.disabled = false;
+    button.classList.remove("loading");
+    btnText.textContent = text;
+  }
+}
+
+// 상태 메시지 보여주기
 function showStatus(message, type) {
   statusMessage.innerHTML = message;
   statusMessage.className = `status-message ${type}`;
