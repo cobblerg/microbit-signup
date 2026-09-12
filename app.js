@@ -65,6 +65,10 @@ async function sendRequest(payload, targetForm, button, defaultText, loadingText
   setButtonLoading(button, true, loadingText);
   hideStatus();
 
+  // 15초 지나면 자동으로 대기를 중단하는 안전장치
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
   try {
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
@@ -72,8 +76,10 @@ async function sendRequest(payload, targetForm, button, defaultText, loadingText
         "Content-Type": "text/plain;charset=utf-8",
       },
       body: JSON.stringify(payload),
+      signal: controller.signal,
     });
 
+    clearTimeout(timeoutId);
     const result = await response.json();
 
     if (result.status === "success") {
@@ -93,11 +99,20 @@ async function sendRequest(payload, targetForm, button, defaultText, loadingText
       setButtonLoading(button, false, defaultText);
     }
   } catch (error) {
+    clearTimeout(timeoutId);
     console.error("전송 에러:", error);
-    showStatus(
-      "네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
-      "error"
-    );
+
+    if (error.name === "AbortError") {
+      showStatus(
+        "응답 시간이 초과되었습니다. 구글 시트 배포 상태를 확인해 주세요.",
+        "error"
+      );
+    } else {
+      showStatus(
+        "네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+        "error"
+      );
+    }
     setButtonLoading(button, false, defaultText);
   }
 }
