@@ -1,10 +1,10 @@
 /**
  * ====================================================================
- * [구글 스프레드시트용 Apps Script 코드 (신청 및 취소 지원 버전)]
+ * [구글 스프레드시트용 Apps Script 코드 (신청 및 취소 완벽 호환 버전)]
  * 
  * 구글 스프레드시트 상단 메뉴 [확장 프로그램] -> [Apps Script]를 열고,
  * 기존 코드를 모두 지운 후 아래 코드를 그대로 붙여넣으세요.
- * 저장 후 [배포] -> [배포 관리] -> [수정] -> [새 버전]으로 배포하세요.
+ * 반드시 [배포] -> [배포 관리] -> [수정] -> [새 버전]으로 배포하세요.
  * ====================================================================
  */
 
@@ -27,35 +27,42 @@ function doPost(e) {
     }
 
     const data = JSON.parse(e.postData.contents);
-    const action = data.action || "apply"; // 기본값은 '신청'
+    
+    // 취소 요청 판별 (action이 'cancel'이거나, 학교 없이 이름과 전화번호만 전달된 경우)
+    const isCancelRequest = (data.action === "cancel") || (!data.schoolName && Boolean(data.userName) && Boolean(data.phoneNumber));
 
     // ==========================================
-    // [모드 1] 신청 취소 처리 (action === "cancel")
+    // [모드 1] 신청 취소 처리
     // ==========================================
-    if (action === "cancel") {
-      const targetName = (data.userName || "").trim();
-      const targetPhone = (data.phoneNumber || "").trim().replace(/[^0-9-]/g, "");
+    if (isCancelRequest) {
+      // 띄어쓰기를 모두 제거하여 일치 여부 비교
+      const targetName = String(data.userName || "").replace(/\s+/g, "");
+      // 숫자만 추출하여 비교 (010-1234-5678 -> 01012345678)
+      const targetPhone = String(data.phoneNumber || "").replace(/[^0-9]/g, "");
 
       if (!targetName || !targetPhone) {
-        return makeResponse("error", "취소할 이름과 전화번호를 입력해 주세요.");
+        return makeResponse("error", "취소할 이름과 전화번호를 모두 입력해 주세요.");
       }
 
       const rows = sheet.getDataRange().getValues();
       let foundIndex = -1;
 
-      // 시트에서 이름과 전화번호가 일치하는 신청자 찾기
+      // 시트 전체에서 이름과 전화번호가 일치하는 신청자 찾기
       for (let i = 1; i < rows.length; i++) {
-        const rowName = String(rows[i][1]).trim();
-        const rowPhone = String(rows[i][3]).trim().replace(/[^0-9-]/g, "");
+        const rowName = String(rows[i][1] || "").replace(/\s+/g, "");
+        const rowPhone = String(rows[i][3] || "").replace(/[^0-9]/g, "");
 
         if (rowName === targetName && rowPhone === targetPhone) {
-          foundIndex = i + 1; // 실제 시트 행 번호 (1-indexed)
+          foundIndex = i + 1; // 구글 시트의 실제 행 번호 (1-indexed)
           break;
         }
       }
 
       if (foundIndex === -1) {
-        return makeResponse("error", "일치하는 신청 내역을 찾을 수 없습니다. 이름과 전화번호를 다시 확인해 주세요.");
+        return makeResponse(
+          "error", 
+          "일치하는 신청 내역을 찾을 수 없습니다.<br>입력하신 이름(" + data.userName + ")과 전화번호를 다시 확인해 주세요."
+        );
       }
 
       // 일치하는 행을 삭제하여 신청 취소 처리 (정원 1자리 자동 확보)
@@ -64,12 +71,12 @@ function doPost(e) {
       const remainingCount = Math.max(0, sheet.getLastRow() - 1);
       return makeResponse(
         "success", 
-        targetName + "님의 참가 신청이 정상적으로 취소되었습니다.<br>(현재 접수 현황: " + remainingCount + " / " + MAX_APPLICANTS + "명)"
+        data.userName + "님의 참가 신청이 정상적으로 취소되었습니다.<br>(현재 접수 인원: " + remainingCount + " / " + MAX_APPLICANTS + "명)"
       );
     }
 
     // ==========================================
-    // [모드 2] 참가 신청 처리 (action === "apply")
+    // [모드 2] 참가 신청 처리 (신청 모드)
     // ==========================================
     const currentCount = Math.max(0, sheet.getLastRow() - 1);
 
@@ -84,17 +91,18 @@ function doPost(e) {
     let phoneNumber = (data.phoneNumber || "").trim().replace(/[^0-9-]/g, "");
 
     if (!userName || !schoolName || !phoneNumber) {
-      return makeResponse("error", "모든 항목을 올바르게 입력해 주세요.");
+      return makeResponse("error", "모든 항목(이름, 학교, 전화번호)을 올바르게 입력해 주세요.");
     }
     if (userName.length > 20 || schoolName.length > 30 || phoneNumber.length > 15) {
       return makeResponse("error", "입력 글자 수가 너무 깁니다.");
     }
 
-    // 3) 중복 신청 방지
+    // 3) 전화번호 중복 신청 방지
+    const cleanNewPhone = phoneNumber.replace(/[^0-9]/g, "");
     const existingData = sheet.getDataRange().getValues();
     for (let i = 1; i < existingData.length; i++) {
-      const existingPhone = String(existingData[i][3]).trim().replace(/[^0-9-]/g, "");
-      if (existingPhone === phoneNumber) {
+      const existingPhone = String(existingData[i][3] || "").replace(/[^0-9]/g, "");
+      if (existingPhone === cleanNewPhone) {
         return makeResponse("error", "이미 해당 전화번호로 신청이 완료된 내역이 있습니다.");
       }
     }
@@ -115,7 +123,7 @@ function doPost(e) {
     );
 
   } catch (error) {
-    return makeResponse("error", "서버 오류: " + error.toString());
+    return makeResponse("error", "서버 처리 중 오류: " + error.toString());
   } finally {
     lock.releaseLock();
   }
