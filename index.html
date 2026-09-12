@@ -8,15 +8,85 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* 행사 안내 공지 카드 스타일 */
+    .event-info-box {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #334155;
+    }
+    .event-info-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: #1e293b;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .event-info-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .event-info-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .event-info-label {
+      font-weight: 600;
+      color: #2563eb;
+      white-space: nowrap;
+      min-width: 52px;
+    }
+    .event-info-desc {
+      color: #475569;
+      word-break: keep-all;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <main class="card">
       <header class="header">
-        <span class="badge">선착순 접수</span>
-        <h1 class="title">프로그램 참가 신청</h1>
+        <span class="badge">AI정보교육연구회(PAGE)</span>
+        <h1 class="title">마이크로비트와 함께</h1>
         <p class="subtitle">선착순 정원이 차면 자동으로 접수가 마감됩니다.</p>
       </header>
+
+      <!-- 행사 상세 안내 공지 박스 -->
+      <section class="event-info-box" aria-label="행사 안내">
+        <div class="event-info-title">
+          📌 <span>행사 안내</span>
+        </div>
+        <ul class="event-info-list">
+          <li>
+            <span class="event-info-label">일시</span>
+            <span class="event-info-desc"><strong>2026년 10월 7일(수) 17시부터</strong></span>
+          </li>
+          <li>
+            <span class="event-info-label">장소</span>
+            <span class="event-info-desc">서울대학교사범대학부설중학교 신관 4층 정보교과교실</span>
+          </li>
+          <li>
+            <span class="event-info-label">주제</span>
+            <span class="event-info-desc">마이크로비트와 함께</span>
+          </li>
+          <li>
+            <span class="event-info-label">체험사례</span>
+            <span class="event-info-desc">마이크로비트 확장보드(지니어스키트), 마퀸, 레트로 아케이드, XGO 라이더, 비트독, 스마트 시계키트</span>
+          </li>
+        </ul>
+      </section>
 
       <!-- 상단 모드 전환 탭 (신청 / 취소) -->
       <div class="tab-container">
